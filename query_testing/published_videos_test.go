@@ -65,3 +65,21 @@ func TestFetchPublishedVideos(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, videos)
 }
+
+func TestUnPublishedVideo(t *testing.T) {
+	video_id, err := uuid.Parse("73281f1b-1033-4636-a8d7-f4963eb33915")
+
+	require.NoError(t, err)
+
+	args := db.UpdatePublishedVideoStatusParams{
+		VideoID: video_id,
+		Status:  helper.VIDEO_UNPUBLISHED,
+	}
+
+	result, err := testQueries.UpdatePublishedVideoStatus(context.Background(), args)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, result)
+
+	require.Equal(t, result.Status, args.Status)
+}

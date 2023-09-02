@@ -25,6 +25,7 @@ type AdminRepository interface {
 	RollBackCreatedPublishVideo(id uuid.UUID) error
 
 	FetchPublishedVideos(args db.FetchAllPublishedVideosParams) ([]db.FetchAllPublishedVideosRow, error)
+	UnPublishVideo(args db.UpdatePublishedVideoStatusParams) error
 }
 
 type adminRepository struct {

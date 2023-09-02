@@ -12,12 +12,13 @@ import (
 )
 
 type AdminController interface {
-	UploadVideoByAdmin(ctx *gin.Context)
-	GetVideoByAdmin(ctx *gin.Context)
-	UpdateVideoStatus(ctx *gin.Context)
-	FetchVerifyVideos(ctx *gin.Context)
-	PublishedVideo(ctx *gin.Context)
-	FetchAllPublishedVideos(ctx *gin.Context)
+	UploadVideoByAdmin(*gin.Context)
+	GetVideoByAdmin(*gin.Context)
+	UpdateVideoStatus(*gin.Context)
+	FetchVerifyVideos(*gin.Context)
+	PublishedVideo(*gin.Context)
+	FetchAllPublishedVideos(*gin.Context)
+	UnPublishVideo(*gin.Context)
 }
 
 type adminController struct {
@@ -163,4 +164,23 @@ func (adminCon *adminController) FetchAllPublishedVideos(ctx *gin.Context) {
 
 	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) UnPublishVideo(ctx *gin.Context) {
+	var req dto.PublishedVideoRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := adminCon.adminServ.UnPublishVideo(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video has been unpublished", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusAccepted, response)
 }

@@ -23,6 +23,7 @@ type AdminService interface {
 	FetchVerifyVideos(dto.FetchVerifyVideosRequestParams) ([]*dto.GetAllVerifyVideos, error)
 	PublishVideo(req dto.PublishedVideoRequestParams) error
 	FetchAllPublishedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error)
+	UnPublishVideo(req dto.PublishedVideoRequestParams) error
 }
 
 type adminService struct {
@@ -249,4 +250,22 @@ func (adminSer *adminService) FetchAllPublishedVideos(req dto.FetchVerifyVideosR
 	}
 
 	return published_video, nil
+}
+
+// unpublish the video
+func (adminSer *adminService) UnPublishVideo(req dto.PublishedVideoRequestParams) error {
+	video_id, err := uuid.Parse(req.VideoId)
+
+	if err != nil {
+		return err
+	}
+
+	args := db.UpdatePublishedVideoStatusParams{
+		VideoID: video_id,
+		Status:  helper.VIDEO_UNPUBLISHED,
+	}
+
+	err = adminSer.adminRepo.UnPublishVideo(args)
+
+	return err
 }

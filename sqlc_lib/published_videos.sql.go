@@ -111,3 +111,29 @@ func (q *Queries) FetchAllPublishedVideos(ctx context.Context, arg FetchAllPubli
 	}
 	return items, nil
 }
+
+const updatePublishedVideoStatus = `-- name: UpdatePublishedVideoStatus :one
+update published_videos
+set status = $2
+where video_id = $1
+returning id, video_id, published_by, status, created_at, updated_at
+`
+
+type UpdatePublishedVideoStatusParams struct {
+	VideoID uuid.UUID `json:"video_id"`
+	Status  string    `json:"status"`
+}
+
+func (q *Queries) UpdatePublishedVideoStatus(ctx context.Context, arg UpdatePublishedVideoStatusParams) (PublishedVideos, error) {
+	row := q.db.QueryRowContext(ctx, updatePublishedVideoStatus, arg.VideoID, arg.Status)
+	var i PublishedVideos
+	err := row.Scan(
+		&i.ID,
+		&i.VideoID,
+		&i.PublishedBy,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

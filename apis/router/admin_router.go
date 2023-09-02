@@ -29,5 +29,6 @@ func AdminRouter(router *gin.Engine, store *apis.Store) {
 	published_video := router.Group("/api", middleware.AuthorizeJWT(JwtServ))
 	{
 		published_video.GET("/published-videos/:page_id/:page_size", adminCont.FetchAllPublishedVideos)
+		published_video.PUT("/published-videos/unpublish-videos/:video_id", adminCont.UnPublishVideo)
 	}
 }

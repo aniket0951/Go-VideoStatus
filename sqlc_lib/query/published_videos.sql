@@ -26,3 +26,9 @@ where pv.status='VIDEO_PUBLISHED'
 order by pv.created_at desc
 limit $1
 offset $2;
+
+-- name: UpdatePublishedVideoStatus :one
+update published_videos
+set status = $2
+where video_id = $1
+returning *;

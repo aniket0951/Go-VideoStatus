@@ -165,3 +165,28 @@ func (adminRepo *adminRepository) FetchPublishedVideos(args db.FetchAllPublished
 
 	return result, nil
 }
+
+// unpublish the video, if it has been uploaded by mistake
+func (adminRepo *adminRepository) UnPublishVideo(args db.UpdatePublishedVideoStatusParams) error {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.UpdatePublishedVideoStatus(ctx, args)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return sql.ErrNoRows
+		}
+	}
+
+	err = helper.HandleDBErr(err)
+	if err != nil {
+		return err
+	}
+
+	if result.Status != args.Status {
+		return errors.New("failed to unpublish the video")
+	}
+
+	return nil
+}
