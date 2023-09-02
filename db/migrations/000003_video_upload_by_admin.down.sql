@@ -1,0 +1,1 @@
+drop table if exists video_by_admin cascade;
