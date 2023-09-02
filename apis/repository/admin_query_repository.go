@@ -1,12 +1,14 @@
 package repository
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/aniket0951/video_status/apis/dto"
 	"github.com/aniket0951/video_status/apis/helper"
 	"github.com/aniket0951/video_status/apis/models"
 	db "github.com/aniket0951/video_status/sqlc_lib"
+	"github.com/google/uuid"
 )
 
 func (adminRepo *adminRepository) UploadVideoByAdmin(args db.UploadVideoByAdminParams) (models.VideoByAdmin, error) {
@@ -104,6 +106,17 @@ func (adminRepo *adminRepository) CreateVerifyVideo(args db.CreateVerifyVideoPar
 	return err
 }
 
+// create a published video object and make status VIDEO_PUBLISHED, this will show to end users
+func (adminRepo *adminRepository) CreatePublishVideo(args db.CreatePublishedVideoParams) (db.PublishedVideos, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	publish_video, err := adminRepo.db.Queries.CreatePublishedVideo(ctx, args)
+
+	err = helper.HandleDBErr(err)
+	return publish_video, err
+}
+
 // make VIDEO_VERIFY to VIDEO_PUBLISHED
 func (adminRepo *adminRepository) UpdateVerifyVideoStatus(args db.UpdateVerifyVideoStatusParams) error {
 	ctx, cancel := adminRepo.Init()
@@ -111,4 +124,44 @@ func (adminRepo *adminRepository) UpdateVerifyVideoStatus(args db.UpdateVerifyVi
 	_, err := adminRepo.db.Queries.UpdateVerifyVideoStatus(ctx, args)
 
 	return err
+}
+
+// rollback the published video if create publish or  update verify status failed
+func (adminRepo *adminRepository) RollBackCreatedPublishVideo(id uuid.UUID) error {
+
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.DeletePublishedVideo(ctx, id)
+
+	if err != nil {
+		return err
+	}
+
+	rows_affected, _ := result.RowsAffected()
+	if rows_affected == 0 {
+		return errors.New("failed to rollback the video")
+	}
+
+	return nil
+}
+
+// fetch all publish videos
+func (adminRepo *adminRepository) FetchPublishedVideos(args db.FetchAllPublishedVideosParams) ([]db.FetchAllPublishedVideosRow, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.FetchAllPublishedVideos(ctx, args)
+
+	err = helper.HandleDBErr(err)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return result, nil
 }

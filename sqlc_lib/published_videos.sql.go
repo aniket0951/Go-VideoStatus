@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -39,4 +41,73 @@ func (q *Queries) CreatePublishedVideo(ctx context.Context, arg CreatePublishedV
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const deletePublishedVideo = `-- name: DeletePublishedVideo :execresult
+delete from published_videos
+where id = $1
+`
+
+func (q *Queries) DeletePublishedVideo(ctx context.Context, id uuid.UUID) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deletePublishedVideo, id)
+}
+
+const fetchAllPublishedVideos = `-- name: FetchAllPublishedVideos :many
+select pv.status,
+pv.created_at as published_at,
+pv.id as published_id,
+va.title as video_title,
+va.file_address as video_address,
+va.created_at as verified_at
+from published_videos as pv
+inner join video_by_admin as va
+on pv.video_id = va.id
+where pv.status='VIDEO_PUBLISHED'
+order by pv.created_at desc
+limit $1
+offset $2
+`
+
+type FetchAllPublishedVideosParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type FetchAllPublishedVideosRow struct {
+	Status       string    `json:"status"`
+	PublishedAt  time.Time `json:"published_at"`
+	PublishedID  uuid.UUID `json:"published_id"`
+	VideoTitle   string    `json:"video_title"`
+	VideoAddress string    `json:"video_address"`
+	VerifiedAt   time.Time `json:"verified_at"`
+}
+
+func (q *Queries) FetchAllPublishedVideos(ctx context.Context, arg FetchAllPublishedVideosParams) ([]FetchAllPublishedVideosRow, error) {
+	rows, err := q.db.QueryContext(ctx, fetchAllPublishedVideos, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []FetchAllPublishedVideosRow{}
+	for rows.Next() {
+		var i FetchAllPublishedVideosRow
+		if err := rows.Scan(
+			&i.Status,
+			&i.PublishedAt,
+			&i.PublishedID,
+			&i.VideoTitle,
+			&i.VideoAddress,
+			&i.VerifiedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

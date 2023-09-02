@@ -21,6 +21,8 @@ type AdminService interface {
 	GetVideoByAdmin(dto.GetVideoByAdminRequestParams) ([]*models.VideoByAdmin, error)
 	UpdateVideoStatus(dto.UpdateVideoStatusRequestParams) error
 	FetchVerifyVideos(dto.FetchVerifyVideosRequestParams) ([]*dto.GetAllVerifyVideos, error)
+	PublishVideo(req dto.PublishedVideoRequestParams) error
+	FetchAllPublishedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error)
 }
 
 type adminService struct {
@@ -163,4 +165,88 @@ func (adminServ *adminService) FetchVerifyVideos(req dto.FetchVerifyVideosReques
 	}
 
 	return videos, err
+}
+
+// publish the video
+func (adminServ *adminService) PublishVideo(req dto.PublishedVideoRequestParams) error {
+	video_id, err := uuid.Parse(req.VideoId)
+	if err != nil {
+		return err
+	}
+
+	published_by, err := uuid.Parse(helper.TOKEN_ID)
+
+	if err != nil {
+		return err
+	}
+
+	// first create publish object
+	publish_args := db.CreatePublishedVideoParams{
+		VideoID:     video_id,
+		PublishedBy: published_by,
+		Status:      helper.VIDEO_PUBLISHED,
+	}
+
+	publish_video_obj, err := adminServ.adminRepo.CreatePublishVideo(publish_args)
+	if err != nil {
+		return err
+	}
+
+	// secound update status
+	err = adminServ.updateVideoStatusForPublish(video_id)
+	if err != nil {
+		// rollback publish_video_obj from published_video
+		err_ := adminServ.rollBackCreatedPublishVideo(publish_video_obj.ID)
+		if err_ != nil {
+			return err_
+		}
+		return err
+	}
+
+	return nil
+}
+
+// update video status in verify_video, make VIDEO_VERIFY to VIDEO_PUBLISHED
+func (adminSer *adminService) updateVideoStatusForPublish(video_id uuid.UUID) error {
+	args := db.UpdateVerifyVideoStatusParams{
+		VideoID: video_id,
+		Status:  helper.VIDEO_PUBLISHED,
+	}
+
+	err := adminSer.adminRepo.UpdateVerifyVideoStatus(args)
+	return err
+}
+
+// rollback db data in case create publish_video or update video status failed
+func (adminSer *adminService) rollBackCreatedPublishVideo(id uuid.UUID) error {
+	return adminSer.adminRepo.RollBackCreatedPublishVideo(id)
+}
+
+// fetch all publish videos
+func (adminSer *adminService) FetchAllPublishedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error) {
+	args := db.FetchAllPublishedVideosParams{
+		Limit:  req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
+	}
+
+	result, err := adminSer.adminRepo.FetchPublishedVideos(args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	published_video := make([]dto.FetchAllPublishedVideosDTO, len(result))
+
+	for i, video := range result {
+		published_video[i] = dto.FetchAllPublishedVideosDTO{
+			Status:       video.Status,
+			PublishedAt:  video.PublishedAt,
+			PublishedID:  video.PublishedID,
+			VideoTitle:   video.VideoTitle,
+			VideoAddress: "http://localhost:8080/static/" + video.VideoAddress,
+			VerifiedAt:   video.VerifiedAt,
+		}
+	}
+
+	return published_video, nil
 }
