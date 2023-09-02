@@ -32,8 +32,36 @@ func createRandomPublishedVideo(t *testing.T) {
 
 	require.NotZero(t, publishe_video.ID)
 	require.NotZero(t, publishe_video.CreatedAt)
+
+	// update video status in verify_video
+	id, _ := uuid.Parse("ec76bd81-2264-4b13-a153-c1b40add7855")
+
+	update_args := db.UpdateVerifyVideoStatusParams{
+		VideoID: id,
+		Status:  helper.VIDEO_PUBLISHED,
+	}
+
+	verify_video, err := testQueries.UpdateVerifyVideoStatus(context.Background(), update_args)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, verify_video)
+
+	require.Equal(t, verify_video.Status, update_args.Status)
+
 }
 
 func TestCreatePublishedVideo(t *testing.T) {
 	createRandomPublishedVideo(t)
+}
+
+func TestFetchPublishedVideos(t *testing.T) {
+	args := db.FetchAllPublishedVideosParams{
+		Limit:  10,
+		Offset: 0,
+	}
+
+	videos, err := testQueries.FetchAllPublishedVideos(context.Background(), args)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, videos)
 }

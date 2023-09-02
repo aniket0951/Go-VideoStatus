@@ -108,17 +108,17 @@ func (q *Queries) GetAllVerifyVideos(ctx context.Context, arg GetAllVerifyVideos
 const updateVerifyVideoStatus = `-- name: UpdateVerifyVideoStatus :one
 update verify_videos
 set status = $2
-where id = $1
+where video_id = $1
 returning id, video_id, verify_by, status, created_at, updated_at
 `
 
 type UpdateVerifyVideoStatusParams struct {
-	ID     uuid.UUID `json:"id"`
-	Status string    `json:"status"`
+	VideoID uuid.UUID `json:"video_id"`
+	Status  string    `json:"status"`
 }
 
 func (q *Queries) UpdateVerifyVideoStatus(ctx context.Context, arg UpdateVerifyVideoStatusParams) (VerifyVideos, error) {
-	row := q.db.QueryRowContext(ctx, updateVerifyVideoStatus, arg.ID, arg.Status)
+	row := q.db.QueryRowContext(ctx, updateVerifyVideoStatus, arg.VideoID, arg.Status)
 	var i VerifyVideos
 	err := row.Scan(
 		&i.ID,

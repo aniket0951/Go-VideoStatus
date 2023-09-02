@@ -10,7 +10,7 @@ insert into verify_videos (
 -- name: UpdateVerifyVideoStatus :one
 update verify_videos
 set status = $2
-where id = $1
+where video_id = $1
 returning *;
 
 -- name: GetAllVerifyVideos :many

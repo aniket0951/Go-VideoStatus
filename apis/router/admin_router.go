@@ -23,5 +23,11 @@ func AdminRouter(router *gin.Engine, store *apis.Store) {
 		admin_router.GET("/admin-videos/:page_id/:page_size", adminCont.GetVideoByAdmin)
 		admin_router.PUT("/admin-videos/update-status", adminCont.UpdateVideoStatus)
 		admin_router.GET("/admin-videos/verify-videos/:page_id/:page_size", adminCont.FetchVerifyVideos)
+		admin_router.POST("/admin-videos/publish-video/:video_id", adminCont.PublishedVideo)
+	}
+
+	published_video := router.Group("/api", middleware.AuthorizeJWT(JwtServ))
+	{
+		published_video.GET("/published-videos/:page_id/:page_size", adminCont.FetchAllPublishedVideos)
 	}
 }

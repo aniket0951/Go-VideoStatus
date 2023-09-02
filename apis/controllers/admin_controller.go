@@ -16,6 +16,8 @@ type AdminController interface {
 	GetVideoByAdmin(ctx *gin.Context)
 	UpdateVideoStatus(ctx *gin.Context)
 	FetchVerifyVideos(ctx *gin.Context)
+	PublishedVideo(ctx *gin.Context)
+	FetchAllPublishedVideos(ctx *gin.Context)
 }
 
 type adminController struct {
@@ -31,7 +33,6 @@ func NewAdminController(service services.AdminService) AdminController {
 func (adminCon *adminController) UploadVideoByAdmin(ctx *gin.Context) {
 	file, _, _ := ctx.Request.FormFile("video_file")
 	title := ctx.PostForm("title")
-	uploaded_by := ctx.PostForm("uploaded_by")
 	status := ctx.PostForm("status")
 
 	if title == "" || status == "" {
@@ -39,9 +40,11 @@ func (adminCon *adminController) UploadVideoByAdmin(ctx *gin.Context) {
 		return
 	}
 
-	admin_user, err := uuid.Parse(uploaded_by)
+	admin_user, err := uuid.Parse(helper.TOKEN_ID)
 
-	if helper.CheckError(err, ctx) {
+	if err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -115,6 +118,44 @@ func (adminCon *adminController) FetchVerifyVideos(ctx *gin.Context) {
 	}
 
 	videos, err := adminCon.adminServ.FetchVerifyVideos(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) PublishedVideo(ctx *gin.Context) {
+	var req dto.PublishedVideoRequestParams
+
+	if err := ctx.ShouldBindUri(&req); helper.CheckError(err, ctx) {
+		return
+	}
+
+	err := adminCon.adminServ.PublishVideo(req)
+
+	if err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.VIDEO_DATA)
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video has been published", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchAllPublishedVideos(ctx *gin.Context) {
+	var req dto.FetchVerifyVideosRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	videos, err := adminCon.adminServ.FetchAllPublishedVideos(req)
 
 	if helper.CheckError(err, ctx) {
 		return

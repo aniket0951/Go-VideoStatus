@@ -41,8 +41,8 @@ func TestUpdateVerifyVideoStatus(t *testing.T) {
 	id, _ := uuid.Parse("52b54440-2625-44ce-b555-533fd9f8b141")
 
 	args := db.UpdateVerifyVideoStatusParams{
-		ID:     id,
-		Status: helper.VIDEO_PUBLISHED,
+		VideoID: id,
+		Status:  helper.VIDEO_PUBLISHED,
 	}
 
 	verify_video, err := testQueries.UpdateVerifyVideoStatus(context.Background(), args)

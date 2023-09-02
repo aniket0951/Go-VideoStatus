@@ -28,6 +28,19 @@ type FetchVerifyVideosRequestParams struct {
 	PageSize int32 `uri:"page_size" binding:"required"`
 }
 
+type PublishedVideoRequestParams struct {
+	VideoId string `uri:"video_id" binding:"required"`
+}
+
+type FetchAllPublishedVideosDTO struct {
+	Status       string    `json:"status"`
+	PublishedAt  time.Time `json:"published_at"`
+	PublishedID  uuid.UUID `json:"published_id"`
+	VideoTitle   string    `json:"video_title"`
+	VideoAddress string    `json:"video_address"`
+	VerifiedAt   time.Time `json:"verified_at"`
+}
+
 type GetAllVerifyVideos struct {
 	Status       string    `json:"status"`
 	VideoID      uuid.UUID `json:"video_id"`

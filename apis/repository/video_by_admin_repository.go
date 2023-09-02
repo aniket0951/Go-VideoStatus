@@ -8,6 +8,7 @@ import (
 	"github.com/aniket0951/video_status/apis/dto"
 	"github.com/aniket0951/video_status/apis/models"
 	db "github.com/aniket0951/video_status/sqlc_lib"
+	"github.com/google/uuid"
 )
 
 type AdminRepository interface {
@@ -18,6 +19,12 @@ type AdminRepository interface {
 	UpdateVideoStatus(args db.UpdateVideoStatusParams) error
 	CreateVerifyVideo(args db.CreateVerifyVideoParams) error
 	FetchVerifyVideos(args db.GetAllVerifyVideosParams) ([]*dto.GetAllVerifyVideos, error)
+
+	CreatePublishVideo(args db.CreatePublishedVideoParams) (db.PublishedVideos, error)
+	UpdateVerifyVideoStatus(args db.UpdateVerifyVideoStatusParams) error
+	RollBackCreatedPublishVideo(id uuid.UUID) error
+
+	FetchPublishedVideos(args db.FetchAllPublishedVideosParams) ([]db.FetchAllPublishedVideosRow, error)
 }
 
 type adminRepository struct {
