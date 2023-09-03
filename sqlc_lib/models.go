@@ -50,3 +50,16 @@ type VideoByAdmin struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+
+type VideoVerificationProcessFailed struct {
+	Id                   uuid.UUID     `json:"Id"`
+	VideoID              uuid.UUID     `json:"video_id"`
+	VerificationFailedBy uuid.NullUUID `json:"verification_failed_by"`
+	UnpublishedBy        uuid.NullUUID `json:"unpublished_by"`
+	Status               string        `json:"status"`
+	Reason               string        `json:"reason"`
+	IsVerificationFailed sql.NullBool  `json:"is_verification_failed"`
+	IsUnpublished        sql.NullBool  `json:"is_unpublished"`
+	CreatedAt            time.Time     `json:"created_at"`
+	UpdatedAt            time.Time     `json:"updated_at"`
+}

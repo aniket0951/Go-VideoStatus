@@ -24,6 +24,8 @@ type AdminService interface {
 	PublishVideo(req dto.PublishedVideoRequestParams) error
 	FetchAllPublishedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error)
 	UnPublishVideo(req dto.PublishedVideoRequestParams) error
+
+	FetchUnPublishVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO,error)
 }
 
 type adminService struct {
@@ -240,6 +242,7 @@ func (adminSer *adminService) FetchAllPublishedVideos(req dto.FetchVerifyVideosR
 
 	for i, video := range result {
 		published_video[i] = dto.FetchAllPublishedVideosDTO{
+			VideoID:      video.VideoID,
 			Status:       video.Status,
 			PublishedAt:  video.PublishedAt,
 			PublishedID:  video.PublishedID,
@@ -268,4 +271,33 @@ func (adminSer *adminService) UnPublishVideo(req dto.PublishedVideoRequestParams
 	err = adminSer.adminRepo.UnPublishVideo(args)
 
 	return err
+}
+
+// fetch all un-publish Video
+func (adminServ *adminService) FetchUnPublishVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO,error) {
+	args := db.FetchAllUnPublishedVideosParams{
+		Limit: req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
+	}
+
+	result, err := adminServ.adminRepo.FetchAllUnPublishVideo(args)
+
+	if err != nil{return nil,err}
+
+	unpublish_videos := make([]dto.FetchAllPublishedVideosDTO, len(result))
+
+	for i,video := range result {
+		unpublish_videos[i] = dto.FetchAllPublishedVideosDTO{
+			VideoID:      video.VideoID,
+			Status:       video.Status,
+			PublishedAt:  video.PublishedAt,
+			PublishedID:  video.PublishedID,
+			VideoTitle:   video.VideoTitle,
+			VideoAddress: "http://localhost:8080/static/" + video.VideoAddress,
+			VerifiedAt:   video.VerifiedAt,
+		}
+	}
+
+	return unpublish_videos, nil
+
 }

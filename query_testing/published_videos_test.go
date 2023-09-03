@@ -83,3 +83,15 @@ func TestUnPublishedVideo(t *testing.T) {
 
 	require.Equal(t, result.Status, args.Status)
 }
+
+func TestFetchUnpublishedVideos(t *testing.T) {
+	args := db.FetchAllUnPublishedVideosParams{
+		Limit: 10,
+		Offset: 0,
+	}
+
+	videos, err := testQueries.FetchAllUnPublishedVideos(context.Background(), args)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, videos)
+}

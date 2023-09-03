@@ -16,6 +16,7 @@ where id = $1;
 select pv.status,
 pv.created_at as published_at,
 pv.id as published_id,
+pv.video_id as video_id,
 va.title as video_title,
 va.file_address as video_address,
 va.created_at as verified_at
@@ -32,3 +33,19 @@ update published_videos
 set status = $2
 where video_id = $1
 returning *;
+
+-- name: FetchAllUnPublishedVideos :many
+select pv.status,
+pv.created_at as published_at,
+pv.id as published_id,
+pv.video_id as video_id,
+va.title as video_title,
+va.file_address as video_address,
+va.created_at as verified_at
+from published_videos as pv
+inner join video_by_admin as va
+on pv.video_id = va.id
+where pv.status='VIDEO_UNPUBLISHED'
+order by pv.created_at desc
+limit $1
+offset $2;

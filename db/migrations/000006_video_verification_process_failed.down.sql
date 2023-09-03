@@ -1,0 +1,1 @@
+drop table if exists video_verification_process_failed cascade;

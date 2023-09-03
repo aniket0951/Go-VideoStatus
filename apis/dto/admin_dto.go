@@ -33,6 +33,7 @@ type PublishedVideoRequestParams struct {
 }
 
 type FetchAllPublishedVideosDTO struct {
+	VideoID      uuid.UUID `json:"video_id"`
 	Status       string    `json:"status"`
 	PublishedAt  time.Time `json:"published_at"`
 	PublishedID  uuid.UUID `json:"published_id"`

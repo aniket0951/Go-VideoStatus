@@ -26,6 +26,7 @@ type AdminRepository interface {
 
 	FetchPublishedVideos(args db.FetchAllPublishedVideosParams) ([]db.FetchAllPublishedVideosRow, error)
 	UnPublishVideo(args db.UpdatePublishedVideoStatusParams) error
+	FetchAllUnPublishVideo(args db.FetchAllUnPublishedVideosParams) ([]db.FetchAllUnPublishedVideosRow, error)
 }
 
 type adminRepository struct {

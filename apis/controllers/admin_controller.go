@@ -19,6 +19,7 @@ type AdminController interface {
 	PublishedVideo(*gin.Context)
 	FetchAllPublishedVideos(*gin.Context)
 	UnPublishVideo(*gin.Context)
+	FetchAllUnPublishVideo(ctx *gin.Context)
 }
 
 type adminController struct {
@@ -183,4 +184,21 @@ func (adminCon *adminController) UnPublishVideo(ctx *gin.Context) {
 
 	response := helper.BuildSuccessResponse("video has been unpublished", helper.EmptyObj{}, helper.VIDEO_DATA)
 	ctx.JSON(http.StatusAccepted, response)
+}
+
+func (adminCon *adminController) FetchAllUnPublishVideo(ctx *gin.Context) {
+	var req dto.FetchVerifyVideosRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	videos, err := adminCon.adminServ.FetchUnPublishVideos(req)
+
+	if helper.CheckError(err, ctx){return}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
 }

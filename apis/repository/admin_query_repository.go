@@ -190,3 +190,18 @@ func (adminRepo *adminRepository) UnPublishVideo(args db.UpdatePublishedVideoSta
 
 	return nil
 }
+
+// fetch unpublish videos 
+func (adminRepo *adminRepository) FetchAllUnPublishVideo(args db.FetchAllUnPublishedVideosParams) ([]db.FetchAllUnPublishedVideosRow, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.FetchAllUnPublishedVideos(ctx, args)
+
+
+	if len(result) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return result, err
+}
