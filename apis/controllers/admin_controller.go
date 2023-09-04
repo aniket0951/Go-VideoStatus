@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/aniket0951/video_status/apis/dto"
@@ -19,10 +20,11 @@ type AdminController interface {
 	PublishedVideo(*gin.Context)
 	FetchAllPublishedVideos(*gin.Context)
 	UnPublishVideo(*gin.Context)
-	FetchAllUnPublishVideo(ctx *gin.Context)
-	MakeVerificationFailed(ctx *gin.Context)
-	MakeUnPublishedVideo(ctx *gin.Context)
-	FetchAllVerificationFailedVideos(ctx *gin.Context)
+	FetchAllUnPublishVideo(*gin.Context)
+	MakeVerificationFailed(*gin.Context)
+	MakeUnPublishedVideo(*gin.Context)
+	FetchAllVerificationFailedVideos(*gin.Context)
+	FetchVerifyVideoFullDetails(*gin.Context)
 }
 
 type adminController struct {
@@ -266,4 +268,30 @@ func (adminCon *adminController) FetchAllVerificationFailedVideos(ctx *gin.Conte
 
 	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchVerifyVideoFullDetails(ctx *gin.Context) {
+	var video_id = ctx.Param("video_id")
+
+	fmt.Println("video id : ", video_id)
+	if video_id == "" {
+		helper.RequestBodyEmptyResponse(ctx)
+		return
+	}
+
+	video_uuid, err := uuid.Parse(video_id)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	video_detail, err := adminCon.adminServ.FetchVerifyVideoFullDetails(video_uuid)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+
 }

@@ -124,7 +124,6 @@ func TestDeleteVerificationFailed(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, result)
-
 }
 
 func TestFetchAllVerificationRejected(t *testing.T) {
@@ -137,4 +136,14 @@ func TestFetchAllVerificationRejected(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, videos)
+}
+
+func TestGetVerifyVideoFullDetails(t *testing.T) {
+	video_id, err := uuid.Parse("7e3aa423-b265-4861-9041-fe308dfb506A")
+	require.NoError(t, err)
+
+	result, err := testQueries.GetVerifyVideoFullDetails(context.Background(), video_id)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, result)
 }

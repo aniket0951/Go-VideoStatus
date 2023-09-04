@@ -36,4 +36,9 @@ func AdminRouter(router *gin.Engine, store *apis.Store) {
 		published_video.PUT("/published-videos/unpublish-videos/:video_id", adminCont.UnPublishVideo)
 		published_video.GET("/fetch-verification-failed-videos/:page_id/:page_size", adminCont.FetchAllVerificationFailedVideos)
 	}
+
+	video_details := router.Group("/api", middleware.AuthorizeJWT(JwtServ))
+	{
+		video_details.GET("/details/verify-video-details/:video_id", adminCont.FetchVerifyVideoFullDetails)
+	}
 }

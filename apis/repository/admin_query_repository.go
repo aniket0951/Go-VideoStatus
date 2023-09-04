@@ -291,3 +291,16 @@ func (adminRepo *adminRepository) FetchAllVerificationFailedVideos(args db.Fetch
 
 	return result, nil
 }
+
+//  ----------------------------------- Videos Full Details ------------------------------------------ //
+
+// fetch video verification full Details
+func (adminRepo *adminRepository) FetchVerifyVideoFullDetails(video_id uuid.UUID) (db.GetVerifyVideoFullDetailsRow, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.GetVerifyVideoFullDetails(ctx, video_id)
+
+	return result, err
+
+}

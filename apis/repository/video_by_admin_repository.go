@@ -31,6 +31,8 @@ type AdminRepository interface {
 	MakeUnPublishedVideo(db.CreateUnPublishedVideoParams) error
 	RollBackCreateVerificationFailed(video_id uuid.UUID) error
 	FetchAllVerificationFailedVideos(db.FetchAllVerirficationFailedVideoParams) ([]db.FetchAllVerirficationFailedVideoRow, error)
+
+	FetchVerifyVideoFullDetails(video_id uuid.UUID) (db.GetVerifyVideoFullDetailsRow, error)
 }
 
 type adminRepository struct {

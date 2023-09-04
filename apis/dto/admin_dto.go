@@ -60,6 +60,18 @@ type CreateVerificationFailedRequestParam struct {
 	Reason  string `json:"reason" binding:"required"`
 }
 
+type FetchVerifyVideoFullDetailsDTO struct {
+	VideoID            uuid.UUID `json:"video_id"`
+	VideoStatus        string    `json:"video_status"`
+	VerificationAt     time.Time `json:"verification_at"`
+	VideoTitle         string    `json:"video_title"`
+	VideoAddress       string    `json:"video_address"`
+	UploadedAt         time.Time `json:"uploaded_at"`
+	UploadedUserName   string    `json:"uploaded_user_name"`
+	UploadedUserType   string    `json:"uploaded_user_type"`
+	VerifiedbyUserName string    `json:"verifiedby_user_name"`
+}
+
 type GetAllVerifyVideos struct {
 	Status       string    `json:"status"`
 	VideoID      uuid.UUID `json:"video_id"`

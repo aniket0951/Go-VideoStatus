@@ -29,6 +29,7 @@ type AdminService interface {
 	MakeVerificationFailed(req dto.CreateVerificationFailedRequestParam) error
 	MakeUnPublishedVideo(req dto.CreateVerificationFailedRequestParam) error
 	FetchAllVerificationFailedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllVerificationFailedVideosDTO, error)
+	FetchVerifyVideoFullDetails(video_id uuid.UUID) (dto.FetchVerifyVideoFullDetailsDTO, error)
 }
 
 type adminService struct {
@@ -434,7 +435,7 @@ func (adminSer *adminService) FetchAllVerificationFailedVideos(req dto.FetchVeri
 			VideoID:            video.VideoID,
 			Status:             video.Status,
 			Reason:             video.Reason,
-			VerificationFailed: video.PublishReject.Bool,
+			VerificationFailed: video.VerificationFailed.Bool,
 			PublishReject:      video.PublishReject.Bool,
 			FailedAt:           video.FailedAt,
 			VideoTitle:         video.VideoTitle,
@@ -444,5 +445,26 @@ func (adminSer *adminService) FetchAllVerificationFailedVideos(req dto.FetchVeri
 	}
 
 	return videos, nil
+}
 
+// -------------------------------- Fetch Video Full Details --------------------------------------- //
+
+func (adminSer *adminService) FetchVerifyVideoFullDetails(video_id uuid.UUID) (dto.FetchVerifyVideoFullDetailsDTO, error) {
+	result, err := adminSer.adminRepo.FetchVerifyVideoFullDetails(video_id)
+
+	if err != nil {
+		return dto.FetchVerifyVideoFullDetailsDTO{}, err
+	}
+
+	return dto.FetchVerifyVideoFullDetailsDTO{
+		VideoID:            result.VideoID,
+		VideoStatus:        result.VideoStatus,
+		VerificationAt:     result.VerificationAt,
+		VideoTitle:         result.VideoTitle,
+		VideoAddress:       "http://localhost:8080/static/" + result.VideoAddress,
+		UploadedAt:         result.UploadedAt,
+		UploadedUserName:   result.UploadedUserName.String,
+		UploadedUserType:   result.UploadedUserType.String,
+		VerifiedbyUserName: result.VerifiedbyUserName.String,
+	}, nil
 }
