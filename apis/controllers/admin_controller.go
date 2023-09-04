@@ -20,6 +20,9 @@ type AdminController interface {
 	FetchAllPublishedVideos(*gin.Context)
 	UnPublishVideo(*gin.Context)
 	FetchAllUnPublishVideo(ctx *gin.Context)
+	MakeVerificationFailed(ctx *gin.Context)
+	MakeUnPublishedVideo(ctx *gin.Context)
+	FetchAllVerificationFailedVideos(ctx *gin.Context)
 }
 
 type adminController struct {
@@ -197,7 +200,69 @@ func (adminCon *adminController) FetchAllUnPublishVideo(ctx *gin.Context) {
 
 	videos, err := adminCon.adminServ.FetchUnPublishVideos(req)
 
-	if helper.CheckError(err, ctx){return}
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) MakeVerificationFailed(ctx *gin.Context) {
+	// verification_failed_by id taking as a current login user
+
+	var req dto.CreateVerificationFailedRequestParam
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := adminCon.adminServ.MakeVerificationFailed(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video verification failed has been successfully", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) MakeUnPublishedVideo(ctx *gin.Context) {
+	// unpublish_by id taking as a current login user
+	var req dto.CreateVerificationFailedRequestParam
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := adminCon.adminServ.MakeUnPublishedVideo(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video unpublish has been successfully", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchAllVerificationFailedVideos(ctx *gin.Context) {
+	var req dto.FetchVerifyVideosRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FETCHED_FAILED, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	videos, err := adminCon.adminServ.FetchAllVerificationFailedVideos(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
 
 	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
 	ctx.JSON(http.StatusOK, response)

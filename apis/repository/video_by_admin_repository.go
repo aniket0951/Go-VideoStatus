@@ -14,19 +14,23 @@ import (
 type AdminRepository interface {
 	Init() (context.Context, context.CancelFunc)
 
-	UploadVideoByAdmin(args db.UploadVideoByAdminParams) (models.VideoByAdmin, error)
-	VideoByAdmin(args db.GetVideoByAdminParams) ([]*models.VideoByAdmin, error)
-	UpdateVideoStatus(args db.UpdateVideoStatusParams) error
-	CreateVerifyVideo(args db.CreateVerifyVideoParams) error
-	FetchVerifyVideos(args db.GetAllVerifyVideosParams) ([]*dto.GetAllVerifyVideos, error)
+	UploadVideoByAdmin(db.UploadVideoByAdminParams) (models.VideoByAdmin, error)
+	VideoByAdmin(db.GetVideoByAdminParams) ([]*models.VideoByAdmin, error)
+	UpdateVideoStatus(db.UpdateVideoStatusParams) error
+	CreateVerifyVideo(db.CreateVerifyVideoParams) error
+	FetchVerifyVideos(db.GetAllVerifyVideosParams) ([]*dto.GetAllVerifyVideos, error)
 
-	CreatePublishVideo(args db.CreatePublishedVideoParams) (db.PublishedVideos, error)
-	UpdateVerifyVideoStatus(args db.UpdateVerifyVideoStatusParams) error
+	CreatePublishVideo(db.CreatePublishedVideoParams) (db.PublishedVideos, error)
+	UpdateVerifyVideoStatus(db.UpdateVerifyVideoStatusParams) error
 	RollBackCreatedPublishVideo(id uuid.UUID) error
 
-	FetchPublishedVideos(args db.FetchAllPublishedVideosParams) ([]db.FetchAllPublishedVideosRow, error)
-	UnPublishVideo(args db.UpdatePublishedVideoStatusParams) error
-	FetchAllUnPublishVideo(args db.FetchAllUnPublishedVideosParams) ([]db.FetchAllUnPublishedVideosRow, error)
+	FetchPublishedVideos(db.FetchAllPublishedVideosParams) ([]db.FetchAllPublishedVideosRow, error)
+	UnPublishVideo(db.UpdatePublishedVideoStatusParams) error
+	FetchAllUnPublishVideo(db.FetchAllUnPublishedVideosParams) ([]db.FetchAllUnPublishedVideosRow, error)
+	MakeVerificationFailed(db.CreateVerificationFailedParams) error
+	MakeUnPublishedVideo(db.CreateUnPublishedVideoParams) error
+	RollBackCreateVerificationFailed(video_id uuid.UUID) error
+	FetchAllVerificationFailedVideos(db.FetchAllVerirficationFailedVideoParams) ([]db.FetchAllVerirficationFailedVideoRow, error)
 }
 
 type adminRepository struct {

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/aniket0951/video_status/apis/dto"
 	"github.com/aniket0951/video_status/apis/helper"
@@ -191,17 +192,102 @@ func (adminRepo *adminRepository) UnPublishVideo(args db.UpdatePublishedVideoSta
 	return nil
 }
 
-// fetch unpublish videos 
+// fetch unpublish videos
 func (adminRepo *adminRepository) FetchAllUnPublishVideo(args db.FetchAllUnPublishedVideosParams) ([]db.FetchAllUnPublishedVideosRow, error) {
 	ctx, cancel := adminRepo.Init()
 	defer cancel()
 
 	result, err := adminRepo.db.Queries.FetchAllUnPublishedVideos(ctx, args)
 
-
 	if len(result) == 0 {
 		return nil, sql.ErrNoRows
 	}
 
 	return result, err
+}
+
+// video verification failed
+func (adminRepo *adminRepository) MakeVerificationFailed(args db.CreateVerificationFailedParams) error {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.CreateVerificationFailed(ctx, args)
+
+	err = helper.HandleDBErr(err)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return errors.New("this video is already in verification failed")
+		}
+		return err
+	}
+
+	if result.VideoID != args.VideoID {
+		return errors.New("failed to creare video verification failed")
+	}
+
+	return nil
+}
+
+// create a unpublish video object in video verification failed
+func (adminRepo *adminRepository) MakeUnPublishedVideo(args db.CreateUnPublishedVideoParams) error {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.CreateUnPublishedVideo(ctx, args)
+
+	err = helper.HandleDBErr(err)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return errors.New("this video is already in verification failed")
+		}
+		return err
+	}
+
+	if result.VideoID != args.VideoID {
+		return errors.New("failed to creare video verification failed")
+	}
+
+	return nil
+}
+
+// rollback the video verification failed process created data, it could be unpublish or video verification failed
+func (adminRepo *adminRepository) RollBackCreateVerificationFailed(video_id uuid.UUID) error {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.DeleteVerificationFailed(ctx, video_id)
+
+	if err != nil {
+		return err
+	}
+
+	rows_affected, err := result.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if rows_affected == 0 {
+		return errors.New("failed to rollback the data")
+	}
+
+	return nil
+}
+
+// fetch all videos from verification failed process
+func (adminRepo *adminRepository) FetchAllVerificationFailedVideos(args db.FetchAllVerirficationFailedVideoParams) ([]db.FetchAllVerirficationFailedVideoRow, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.FetchAllVerirficationFailedVideo(ctx, args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) == 0 {
+		return nil, errors.New("video's not available")
+	}
+
+	return result, nil
 }

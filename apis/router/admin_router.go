@@ -24,6 +24,9 @@ func AdminRouter(router *gin.Engine, store *apis.Store) {
 		admin_router.PUT("/admin-videos/update-status", adminCont.UpdateVideoStatus)
 		admin_router.GET("/admin-videos/verify-videos/:page_id/:page_size", adminCont.FetchVerifyVideos)
 		admin_router.POST("/admin-videos/publish-video/:video_id", adminCont.PublishedVideo)
+		admin_router.POST("/admin-videos/make-verification-failed", adminCont.MakeVerificationFailed)
+		admin_router.POST("/admin-videos/make-unpublish-video", adminCont.MakeUnPublishedVideo)
+
 	}
 
 	published_video := router.Group("/api", middleware.AuthorizeJWT(JwtServ))
@@ -31,5 +34,6 @@ func AdminRouter(router *gin.Engine, store *apis.Store) {
 		published_video.GET("/published-videos/:page_id/:page_size", adminCont.FetchAllPublishedVideos)
 		published_video.GET("/unpublished-videos/:page_id/:page_size", adminCont.FetchAllUnPublishVideo)
 		published_video.PUT("/published-videos/unpublish-videos/:video_id", adminCont.UnPublishVideo)
+		published_video.GET("/fetch-verification-failed-videos/:page_id/:page_size", adminCont.FetchAllVerificationFailedVideos)
 	}
 }

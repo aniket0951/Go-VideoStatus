@@ -91,6 +91,7 @@ func TestCreateVerificationFailed(t *testing.T) {
 	require.Equal(t, result.Reason, args.Reason)
 }
 
+// unpublish the video after the verification
 func TestCreateUnPublieshVideo(t *testing.T) {
 	video_id, _ := uuid.Parse("08da9c3e-6b37-4f54-893b-a42f74503e76")
 	unpublished_by, _ := uuid.Parse("03beec37-4362-49ea-a0e4-1b25279e321c")
@@ -124,4 +125,16 @@ func TestDeleteVerificationFailed(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, result)
 
+}
+
+func TestFetchAllVerificationRejected(t *testing.T) {
+	args := db.FetchAllVerirficationFailedVideoParams{
+		Limit:  10,
+		Offset: 0,
+	}
+
+	videos, err := testQueries.FetchAllVerirficationFailedVideo(context.Background(), args)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, videos)
 }

@@ -20,7 +20,7 @@ type GetVideoByAdminRequestParams struct {
 
 type UpdateVideoStatusRequestParams struct {
 	VideoId     string `form:"video_id" binding:"required"`
-	VideoStatus string `form:"video_status" binding:"required,oneof=VIDEO_INIT VIDEO_VERIFY VIDEO_VIRIFICATION_FAILED VIDEO_PUBLISHED"`
+	VideoStatus string `form:"video_status" binding:"required,oneof=VIDEO_INIT VIDEO_VERIFY VIDEO_VIRIFICATION_FAILED VIDEO_PUBLISHED VIDEO_UNPUBLISHED"`
 }
 
 type FetchVerifyVideosRequestParams struct {
@@ -40,6 +40,24 @@ type FetchAllPublishedVideosDTO struct {
 	VideoTitle   string    `json:"video_title"`
 	VideoAddress string    `json:"video_address"`
 	VerifiedAt   time.Time `json:"verified_at"`
+}
+
+type FetchAllVerificationFailedVideosDTO struct {
+	VideoID            uuid.UUID `json:"video_id"`
+	Status             string    `json:"status"`
+	Reason             string    `json:"reason"`
+	VerificationFailed bool      `json:"verification_failed"`
+	PublishReject      bool      `json:"publish_reject"`
+	FailedAt           time.Time `json:"failed_at"`
+	VideoTitle         string    `json:"video_title"`
+	VideoAddress       string    `json:"video_address"`
+	UploadedAt         time.Time `json:"uploaded_at"`
+}
+
+type CreateVerificationFailedRequestParam struct {
+	VideoID string `json:"video_id" binding:"required"`
+	Status  string `json:"status" binding:"required,oneof=VIDEO_VIRIFICATION_FAILED VIDEO_UNPUBLISHED"`
+	Reason  string `json:"reason" binding:"required"`
 }
 
 type GetAllVerifyVideos struct {
