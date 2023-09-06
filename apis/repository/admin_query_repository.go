@@ -302,5 +302,22 @@ func (adminRepo *adminRepository) FetchVerifyVideoFullDetails(video_id uuid.UUID
 	result, err := adminRepo.db.Queries.GetVerifyVideoFullDetails(ctx, video_id)
 
 	return result, err
+}
 
+// fetch video by admin full Details
+func (adminRepo *adminRepository) FetchVideoByAdminFullDetails(video_id uuid.UUID) (db.GetVideoByAdminFullDetailRow, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	result, err := adminRepo.db.Queries.GetVideoByAdminFullDetail(ctx, video_id)
+
+	return result, err
+}
+
+// fetch publish video full details
+func (adminRepo *adminRepository) FetchPublishVideoFullDetails(video_id uuid.UUID) (db.GetPublishVideoFullDetailsRow, error) {
+	ctx, cancel := adminRepo.Init()
+	defer cancel()
+
+	return adminRepo.db.Queries.GetPublishVideoFullDetails(ctx, video_id)
 }

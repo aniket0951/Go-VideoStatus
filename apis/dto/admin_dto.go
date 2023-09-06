@@ -40,6 +40,7 @@ type FetchAllPublishedVideosDTO struct {
 	VideoTitle   string    `json:"video_title"`
 	VideoAddress string    `json:"video_address"`
 	VerifiedAt   time.Time `json:"verified_at"`
+	Reason       string    `json:"reason,omitempty"`
 }
 
 type FetchAllVerificationFailedVideosDTO struct {
@@ -63,13 +64,32 @@ type CreateVerificationFailedRequestParam struct {
 type FetchVerifyVideoFullDetailsDTO struct {
 	VideoID            uuid.UUID `json:"video_id"`
 	VideoStatus        string    `json:"video_status"`
-	VerificationAt     time.Time `json:"verification_at"`
+	VerificationAt     time.Time `json:"verified_at"`
 	VideoTitle         string    `json:"video_title"`
 	VideoAddress       string    `json:"video_address"`
 	UploadedAt         time.Time `json:"uploaded_at"`
-	UploadedUserName   string    `json:"uploaded_user_name"`
+	UploadedUserName   string    `json:"uploaded_by"`
 	UploadedUserType   string    `json:"uploaded_user_type"`
-	VerifiedbyUserName string    `json:"verifiedby_user_name"`
+	VerifiedbyUserName string    `json:"verified_by"`
+}
+
+type FetchVideoByAdminFullDetailsDTO struct {
+	VideoTitle       string    `json:"video_title"`
+	VideoAddress     string    `json:"video_address"`
+	UploadedAt       time.Time `json:"uploaded_at"`
+	VideoID          uuid.UUID `json:"video_id"`
+	UploadedUserName string    `json:"uploaded_by"`
+}
+
+type FetchPublishVideoFullDetailsDTO struct {
+	PublishedAt  time.Time `json:"published_at"`
+	VerifiedAt   time.Time `json:"verified_at"`
+	UploadedAt   time.Time `json:"uploaded_at"`
+	VideoTitle   string    `json:"video_title"`
+	VideoAddress string    `json:"video_address"`
+	UploadedBy   string    `json:"uploaded_by"`
+	VerifiedBy   string    `json:"verified_by"`
+	PublishedBy  string    `json:"published_by"`
 }
 
 type GetAllVerifyVideos struct {

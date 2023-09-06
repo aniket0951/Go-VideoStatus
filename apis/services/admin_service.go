@@ -30,6 +30,8 @@ type AdminService interface {
 	MakeUnPublishedVideo(req dto.CreateVerificationFailedRequestParam) error
 	FetchAllVerificationFailedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllVerificationFailedVideosDTO, error)
 	FetchVerifyVideoFullDetails(video_id uuid.UUID) (dto.FetchVerifyVideoFullDetailsDTO, error)
+	FetchVideoByAdminFullDetails(video_id uuid.UUID) (dto.FetchVideoByAdminFullDetailsDTO, error)
+	FetchPublishVideoFullDetails(video_id uuid.UUID) (dto.FetchPublishVideoFullDetailsDTO, error)
 }
 
 type adminService struct {
@@ -301,6 +303,7 @@ func (adminServ *adminService) FetchUnPublishVideos(req dto.FetchVerifyVideosReq
 			VideoTitle:   video.VideoTitle,
 			VideoAddress: "http://localhost:8080/static/" + video.VideoAddress,
 			VerifiedAt:   video.VerifiedAt,
+			Reason:       video.Reason,
 		}
 	}
 
@@ -448,7 +451,6 @@ func (adminSer *adminService) FetchAllVerificationFailedVideos(req dto.FetchVeri
 }
 
 // -------------------------------- Fetch Video Full Details --------------------------------------- //
-
 func (adminSer *adminService) FetchVerifyVideoFullDetails(video_id uuid.UUID) (dto.FetchVerifyVideoFullDetailsDTO, error) {
 	result, err := adminSer.adminRepo.FetchVerifyVideoFullDetails(video_id)
 
@@ -466,5 +468,41 @@ func (adminSer *adminService) FetchVerifyVideoFullDetails(video_id uuid.UUID) (d
 		UploadedUserName:   result.UploadedUserName.String,
 		UploadedUserType:   result.UploadedUserType.String,
 		VerifiedbyUserName: result.VerifiedbyUserName.String,
+	}, nil
+}
+
+// fetch video by admin full Details
+func (adminSer *adminService) FetchVideoByAdminFullDetails(video_id uuid.UUID) (dto.FetchVideoByAdminFullDetailsDTO, error) {
+	result, err := adminSer.adminRepo.FetchVideoByAdminFullDetails(video_id)
+	if err != nil {
+		return dto.FetchVideoByAdminFullDetailsDTO{}, err
+	}
+
+	return dto.FetchVideoByAdminFullDetailsDTO{
+		VideoTitle:       result.VideoTitle,
+		VideoAddress:     helper.LOCAL_ADDRESS + result.VideoAddress,
+		UploadedAt:       result.UploadedAt,
+		VideoID:          result.VideoID,
+		UploadedUserName: result.UploadedUserName,
+	}, nil
+}
+
+// fetch publish video full details
+func (adminSer *adminService) FetchPublishVideoFullDetails(video_id uuid.UUID) (dto.FetchPublishVideoFullDetailsDTO, error) {
+	result, err := adminSer.adminRepo.FetchPublishVideoFullDetails(video_id)
+
+	if err != nil {
+		return dto.FetchPublishVideoFullDetailsDTO{}, err
+	}
+
+	return dto.FetchPublishVideoFullDetailsDTO{
+		PublishedAt:  result.PublishedAt,
+		VerifiedAt:   result.VerifiedAt,
+		UploadedAt:   result.UploadedAt,
+		VideoTitle:   result.VideoTitle,
+		VideoAddress: helper.LOCAL_ADDRESS + result.VideoAddress,
+		UploadedBy:   result.UploadedBy.String,
+		VerifiedBy:   result.VerifiedBy.String,
+		PublishedBy:  result.PublishedBy.String,
 	}, nil
 }

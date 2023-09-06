@@ -25,6 +25,8 @@ type AdminController interface {
 	MakeUnPublishedVideo(*gin.Context)
 	FetchAllVerificationFailedVideos(*gin.Context)
 	FetchVerifyVideoFullDetails(*gin.Context)
+	FetchVideoByAdminFullDetails(ctx *gin.Context)
+	FetchPublishVideoFullDetails(ctx *gin.Context)
 }
 
 type adminController struct {
@@ -293,5 +295,52 @@ func (adminCon *adminController) FetchVerifyVideoFullDetails(ctx *gin.Context) {
 
 	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
 	ctx.JSON(http.StatusOK, response)
+}
 
+func (adminCon *adminController) FetchVideoByAdminFullDetails(ctx *gin.Context) {
+	video_id := ctx.Param("video_id")
+
+	if video_id == "" {
+		helper.RequestBodyEmptyResponse(ctx)
+		return
+	}
+
+	video_id_obj, err := uuid.Parse(video_id)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	video_detail, err := adminCon.adminServ.FetchVideoByAdminFullDetails(video_id_obj)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchPublishVideoFullDetails(ctx *gin.Context) {
+	video_id := ctx.Param("video_id")
+
+	if video_id == "" {
+		helper.RequestBodyEmptyResponse(ctx)
+		return
+	}
+
+	video_id_obj, err := uuid.Parse(video_id)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	video_detail, err := adminCon.adminServ.FetchPublishVideoFullDetails(video_id_obj)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
 }

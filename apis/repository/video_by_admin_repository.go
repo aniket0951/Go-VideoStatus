@@ -33,6 +33,8 @@ type AdminRepository interface {
 	FetchAllVerificationFailedVideos(db.FetchAllVerirficationFailedVideoParams) ([]db.FetchAllVerirficationFailedVideoRow, error)
 
 	FetchVerifyVideoFullDetails(video_id uuid.UUID) (db.GetVerifyVideoFullDetailsRow, error)
+	FetchVideoByAdminFullDetails(video_id uuid.UUID) (db.GetVideoByAdminFullDetailRow, error)
+	FetchPublishVideoFullDetails(video_id uuid.UUID) (db.GetPublishVideoFullDetailsRow, error)
 }
 
 type adminRepository struct {

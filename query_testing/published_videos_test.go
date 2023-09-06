@@ -86,7 +86,7 @@ func TestUnPublishedVideo(t *testing.T) {
 
 func TestFetchUnpublishedVideos(t *testing.T) {
 	args := db.FetchAllUnPublishedVideosParams{
-		Limit: 10,
+		Limit:  10,
 		Offset: 0,
 	}
 
@@ -94,4 +94,15 @@ func TestFetchUnpublishedVideos(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, videos)
+}
+
+func TestFetchPublishVideoFullDetails(t *testing.T) {
+	video_id, err := uuid.Parse("7e3aa423-b265-4861-9041-fe308dfb5069")
+
+	require.NoError(t, err)
+
+	result, err := testQueries.GetPublishVideoFullDetails(context.Background(), video_id)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, result)
 }

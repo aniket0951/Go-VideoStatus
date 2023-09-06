@@ -40,5 +40,7 @@ func AdminRouter(router *gin.Engine, store *apis.Store) {
 	video_details := router.Group("/api", middleware.AuthorizeJWT(JwtServ))
 	{
 		video_details.GET("/details/verify-video-details/:video_id", adminCont.FetchVerifyVideoFullDetails)
+		video_details.GET("/details/video-by-admin-details/:video_id", adminCont.FetchVideoByAdminFullDetails)
+		video_details.GET("/details/publish-video-details/:video_id", adminCont.FetchPublishVideoFullDetails)
 	}
 }
