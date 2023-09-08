@@ -19,3 +19,14 @@ offset $4;
 update video_by_admin
 set status = $2
 where id = $1;
+
+-- name: GetVideoByAdminFullDetail :one 
+select va.title as video_title,
+va.file_address as video_address,
+va.created_at as uploaded_at,
+va.id as video_id,
+u.name as uploaded_user_name
+from video_by_admin as va
+inner join users as u
+on va.uploaded_by = u.id
+where va.id = $1;

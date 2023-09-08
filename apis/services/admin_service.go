@@ -23,6 +23,15 @@ type AdminService interface {
 	FetchVerifyVideos(dto.FetchVerifyVideosRequestParams) ([]*dto.GetAllVerifyVideos, error)
 	PublishVideo(req dto.PublishedVideoRequestParams) error
 	FetchAllPublishedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error)
+	UnPublishVideo(req dto.PublishedVideoRequestParams) error
+
+	FetchUnPublishVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error)
+	MakeVerificationFailed(req dto.CreateVerificationFailedRequestParam) error
+	MakeUnPublishedVideo(req dto.CreateVerificationFailedRequestParam) error
+	FetchAllVerificationFailedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllVerificationFailedVideosDTO, error)
+	FetchVerifyVideoFullDetails(video_id uuid.UUID) (dto.FetchVerifyVideoFullDetailsDTO, error)
+	FetchVideoByAdminFullDetails(video_id uuid.UUID) (dto.FetchVideoByAdminFullDetailsDTO, error)
+	FetchPublishVideoFullDetails(video_id uuid.UUID) (dto.FetchPublishVideoFullDetailsDTO, error)
 }
 
 type adminService struct {
@@ -193,7 +202,7 @@ func (adminServ *adminService) PublishVideo(req dto.PublishedVideoRequestParams)
 	}
 
 	// secound update status
-	err = adminServ.updateVideoStatusForPublish(video_id)
+	err = adminServ.updateVideoStatusForPublish(video_id, helper.VIDEO_PUBLISHED)
 	if err != nil {
 		// rollback publish_video_obj from published_video
 		err_ := adminServ.rollBackCreatedPublishVideo(publish_video_obj.ID)
@@ -206,11 +215,11 @@ func (adminServ *adminService) PublishVideo(req dto.PublishedVideoRequestParams)
 	return nil
 }
 
-// update video status in verify_video, make VIDEO_VERIFY to VIDEO_PUBLISHED
-func (adminSer *adminService) updateVideoStatusForPublish(video_id uuid.UUID) error {
+// update video status in verify_video, make VIDEO_VERIFY ,VIDEO_PUBLISHED, VIDEO_UNPUBLISHED
+func (adminSer *adminService) updateVideoStatusForPublish(video_id uuid.UUID, status string) error {
 	args := db.UpdateVerifyVideoStatusParams{
 		VideoID: video_id,
-		Status:  helper.VIDEO_PUBLISHED,
+		Status:  status,
 	}
 
 	err := adminSer.adminRepo.UpdateVerifyVideoStatus(args)
@@ -239,6 +248,7 @@ func (adminSer *adminService) FetchAllPublishedVideos(req dto.FetchVerifyVideosR
 
 	for i, video := range result {
 		published_video[i] = dto.FetchAllPublishedVideosDTO{
+			VideoID:      video.VideoID,
 			Status:       video.Status,
 			PublishedAt:  video.PublishedAt,
 			PublishedID:  video.PublishedID,
@@ -249,4 +259,250 @@ func (adminSer *adminService) FetchAllPublishedVideos(req dto.FetchVerifyVideosR
 	}
 
 	return published_video, nil
+}
+
+// unpublish the video
+func (adminSer *adminService) UnPublishVideo(req dto.PublishedVideoRequestParams) error {
+	video_id, err := uuid.Parse(req.VideoId)
+
+	if err != nil {
+		return err
+	}
+
+	args := db.UpdatePublishedVideoStatusParams{
+		VideoID: video_id,
+		Status:  helper.VIDEO_UNPUBLISHED,
+	}
+
+	err = adminSer.adminRepo.UnPublishVideo(args)
+
+	return err
+}
+
+// fetch all un-publish Video
+func (adminServ *adminService) FetchUnPublishVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllPublishedVideosDTO, error) {
+	args := db.FetchAllUnPublishedVideosParams{
+		Limit:  req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
+	}
+
+	result, err := adminServ.adminRepo.FetchAllUnPublishVideo(args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	unpublish_videos := make([]dto.FetchAllPublishedVideosDTO, len(result))
+
+	for i, video := range result {
+		unpublish_videos[i] = dto.FetchAllPublishedVideosDTO{
+			VideoID:      video.VideoID,
+			Status:       video.Status,
+			PublishedAt:  video.PublishedAt,
+			PublishedID:  video.PublishedID,
+			VideoTitle:   video.VideoTitle,
+			VideoAddress: "http://localhost:8080/static/" + video.VideoAddress,
+			VerifiedAt:   video.VerifiedAt,
+			Reason:       video.Reason,
+		}
+	}
+
+	return unpublish_videos, nil
+}
+
+// make video verification failed
+func (adminSer *adminService) MakeVerificationFailed(req dto.CreateVerificationFailedRequestParam) error {
+	video_id, err := uuid.Parse(req.VideoID)
+
+	if err != nil {
+		return err
+	}
+
+	verification_failed_by, err := uuid.Parse(helper.TOKEN_ID)
+
+	if err != nil {
+		return err
+	}
+
+	args := db.CreateVerificationFailedParams{
+		VideoID: video_id,
+		VerificationFailedBy: uuid.NullUUID{
+			UUID:  verification_failed_by,
+			Valid: true,
+		},
+		Status: req.Status,
+		Reason: req.Reason,
+		IsVerificationFailed: sql.NullBool{
+			Bool:  true,
+			Valid: true,
+		},
+	}
+
+	err = adminSer.adminRepo.MakeVerificationFailed(args)
+
+	if err != nil {
+		return err
+	}
+
+	// update video status in verify_video, make it VIDEO_INIT to VIDEO_VIRIFICATION_FAILED
+	update_args := db.UpdateVideoStatusParams{
+		ID:     video_id,
+		Status: helper.VIDEO_VIRIFICATION_FAILED,
+	}
+
+	// first update status in video_by_admin
+	err = adminSer.adminRepo.UpdateVideoStatus(update_args)
+
+	// if err get occured when updating a status, then roolback the db transaction, means delete recent created object
+	if err != nil {
+		// roll back the create data
+		err_ := adminSer.adminRepo.RollBackCreateVerificationFailed(video_id)
+		if err_ != nil {
+			return err_
+		}
+		return err
+	}
+
+	return err
+}
+
+// make unpublish video object
+func (adminSer *adminService) MakeUnPublishedVideo(req dto.CreateVerificationFailedRequestParam) error {
+	video_id, err := uuid.Parse(req.VideoID)
+
+	if err != nil {
+		return err
+	}
+
+	unpublish_by, err := uuid.Parse(helper.TOKEN_ID)
+
+	if err != nil {
+		return err
+	}
+
+	args := db.CreateUnPublishedVideoParams{
+		VideoID: video_id,
+		UnpublishedBy: uuid.NullUUID{
+			UUID:  unpublish_by,
+			Valid: true,
+		},
+		Status: req.Status,
+		Reason: req.Reason,
+		IsVerificationFailed: sql.NullBool{
+			Bool:  false,
+			Valid: true,
+		},
+		IsUnpublished: sql.NullBool{
+			Bool:  true,
+			Valid: true,
+		},
+	}
+
+	err = adminSer.adminRepo.MakeUnPublishedVideo(args)
+
+	if err != nil {
+		return err
+	}
+
+	err = adminSer.updateVideoStatusForPublish(video_id, helper.VIDEO_UNPUBLISHED)
+	if err != nil {
+		// rollback the create obj from video_verification_process_failed
+		err_ := adminSer.adminRepo.RollBackCreateVerificationFailed(video_id)
+		if err_ != nil {
+			return err_
+		}
+
+		return err
+	}
+
+	return err
+}
+
+// fetch video verification failed videos
+func (adminSer *adminService) FetchAllVerificationFailedVideos(req dto.FetchVerifyVideosRequestParams) ([]dto.FetchAllVerificationFailedVideosDTO, error) {
+	args := db.FetchAllVerirficationFailedVideoParams{
+		Limit:  req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
+	}
+
+	result, err := adminSer.adminRepo.FetchAllVerificationFailedVideos(args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	videos := make([]dto.FetchAllVerificationFailedVideosDTO, len(result))
+
+	for i, video := range result {
+		videos[i] = dto.FetchAllVerificationFailedVideosDTO{
+			VideoID:            video.VideoID,
+			Status:             video.Status,
+			Reason:             video.Reason,
+			VerificationFailed: video.VerificationFailed.Bool,
+			PublishReject:      video.PublishReject.Bool,
+			FailedAt:           video.FailedAt,
+			VideoTitle:         video.VideoTitle,
+			VideoAddress:       "http://localhost:8080/static/" + video.VideoAddress,
+			UploadedAt:         video.UploadedAt,
+		}
+	}
+
+	return videos, nil
+}
+
+// -------------------------------- Fetch Video Full Details --------------------------------------- //
+func (adminSer *adminService) FetchVerifyVideoFullDetails(video_id uuid.UUID) (dto.FetchVerifyVideoFullDetailsDTO, error) {
+	result, err := adminSer.adminRepo.FetchVerifyVideoFullDetails(video_id)
+
+	if err != nil {
+		return dto.FetchVerifyVideoFullDetailsDTO{}, err
+	}
+
+	return dto.FetchVerifyVideoFullDetailsDTO{
+		VideoID:            result.VideoID,
+		VideoStatus:        result.VideoStatus,
+		VerificationAt:     result.VerificationAt,
+		VideoTitle:         result.VideoTitle,
+		VideoAddress:       "http://localhost:8080/static/" + result.VideoAddress,
+		UploadedAt:         result.UploadedAt,
+		UploadedUserName:   result.UploadedUserName.String,
+		UploadedUserType:   result.UploadedUserType.String,
+		VerifiedbyUserName: result.VerifiedbyUserName.String,
+	}, nil
+}
+
+// fetch video by admin full Details
+func (adminSer *adminService) FetchVideoByAdminFullDetails(video_id uuid.UUID) (dto.FetchVideoByAdminFullDetailsDTO, error) {
+	result, err := adminSer.adminRepo.FetchVideoByAdminFullDetails(video_id)
+	if err != nil {
+		return dto.FetchVideoByAdminFullDetailsDTO{}, err
+	}
+
+	return dto.FetchVideoByAdminFullDetailsDTO{
+		VideoTitle:       result.VideoTitle,
+		VideoAddress:     helper.LOCAL_ADDRESS + result.VideoAddress,
+		UploadedAt:       result.UploadedAt,
+		VideoID:          result.VideoID,
+		UploadedUserName: result.UploadedUserName,
+	}, nil
+}
+
+// fetch publish video full details
+func (adminSer *adminService) FetchPublishVideoFullDetails(video_id uuid.UUID) (dto.FetchPublishVideoFullDetailsDTO, error) {
+	result, err := adminSer.adminRepo.FetchPublishVideoFullDetails(video_id)
+
+	if err != nil {
+		return dto.FetchPublishVideoFullDetailsDTO{}, err
+	}
+
+	return dto.FetchPublishVideoFullDetailsDTO{
+		PublishedAt:  result.PublishedAt,
+		VerifiedAt:   result.VerifiedAt,
+		UploadedAt:   result.UploadedAt,
+		VideoTitle:   result.VideoTitle,
+		VideoAddress: helper.LOCAL_ADDRESS + result.VideoAddress,
+		UploadedBy:   result.UploadedBy.String,
+		VerifiedBy:   result.VerifiedBy.String,
+		PublishedBy:  result.PublishedBy.String,
+	}, nil
 }

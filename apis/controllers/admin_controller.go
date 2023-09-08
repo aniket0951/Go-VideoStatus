@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/aniket0951/video_status/apis/dto"
@@ -12,12 +13,20 @@ import (
 )
 
 type AdminController interface {
-	UploadVideoByAdmin(ctx *gin.Context)
-	GetVideoByAdmin(ctx *gin.Context)
-	UpdateVideoStatus(ctx *gin.Context)
-	FetchVerifyVideos(ctx *gin.Context)
-	PublishedVideo(ctx *gin.Context)
-	FetchAllPublishedVideos(ctx *gin.Context)
+	UploadVideoByAdmin(*gin.Context)
+	GetVideoByAdmin(*gin.Context)
+	UpdateVideoStatus(*gin.Context)
+	FetchVerifyVideos(*gin.Context)
+	PublishedVideo(*gin.Context)
+	FetchAllPublishedVideos(*gin.Context)
+	UnPublishVideo(*gin.Context)
+	FetchAllUnPublishVideo(*gin.Context)
+	MakeVerificationFailed(*gin.Context)
+	MakeUnPublishedVideo(*gin.Context)
+	FetchAllVerificationFailedVideos(*gin.Context)
+	FetchVerifyVideoFullDetails(*gin.Context)
+	FetchVideoByAdminFullDetails(ctx *gin.Context)
+	FetchPublishVideoFullDetails(ctx *gin.Context)
 }
 
 type adminController struct {
@@ -162,5 +171,176 @@ func (adminCon *adminController) FetchAllPublishedVideos(ctx *gin.Context) {
 	}
 
 	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) UnPublishVideo(ctx *gin.Context) {
+	var req dto.PublishedVideoRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := adminCon.adminServ.UnPublishVideo(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video has been unpublished", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusAccepted, response)
+}
+
+func (adminCon *adminController) FetchAllUnPublishVideo(ctx *gin.Context) {
+	var req dto.FetchVerifyVideosRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	videos, err := adminCon.adminServ.FetchUnPublishVideos(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) MakeVerificationFailed(ctx *gin.Context) {
+	// verification_failed_by id taking as a current login user
+
+	var req dto.CreateVerificationFailedRequestParam
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := adminCon.adminServ.MakeVerificationFailed(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video verification failed has been successfully", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) MakeUnPublishedVideo(ctx *gin.Context) {
+	// unpublish_by id taking as a current login user
+	var req dto.CreateVerificationFailedRequestParam
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FAILED_PROCESS, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := adminCon.adminServ.MakeUnPublishedVideo(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse("video unpublish has been successfully", helper.EmptyObj{}, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchAllVerificationFailedVideos(ctx *gin.Context) {
+	var req dto.FetchVerifyVideosRequestParams
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		response := helper.BuildFailedResponse(helper.FETCHED_FAILED, err.Error(), helper.EmptyObj{}, helper.DATA)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	videos, err := adminCon.adminServ.FetchAllVerificationFailedVideos(req)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, videos, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchVerifyVideoFullDetails(ctx *gin.Context) {
+	var video_id = ctx.Param("video_id")
+
+	fmt.Println("video id : ", video_id)
+	if video_id == "" {
+		helper.RequestBodyEmptyResponse(ctx)
+		return
+	}
+
+	video_uuid, err := uuid.Parse(video_id)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	video_detail, err := adminCon.adminServ.FetchVerifyVideoFullDetails(video_uuid)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchVideoByAdminFullDetails(ctx *gin.Context) {
+	video_id := ctx.Param("video_id")
+
+	if video_id == "" {
+		helper.RequestBodyEmptyResponse(ctx)
+		return
+	}
+
+	video_id_obj, err := uuid.Parse(video_id)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	video_detail, err := adminCon.adminServ.FetchVideoByAdminFullDetails(video_id_obj)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (adminCon *adminController) FetchPublishVideoFullDetails(ctx *gin.Context) {
+	video_id := ctx.Param("video_id")
+
+	if video_id == "" {
+		helper.RequestBodyEmptyResponse(ctx)
+		return
+	}
+
+	video_id_obj, err := uuid.Parse(video_id)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	video_detail, err := adminCon.adminServ.FetchPublishVideoFullDetails(video_id_obj)
+
+	if helper.CheckError(err, ctx) {
+		return
+	}
+
+	response := helper.BuildSuccessResponse(helper.FETCHED_SUCCESS, video_detail, helper.VIDEO_DATA)
 	ctx.JSON(http.StatusOK, response)
 }

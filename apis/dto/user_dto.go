@@ -31,3 +31,21 @@ type GetAdminUser struct {
 	UserType    string `json:"user_type"`
 	AccessToken string `json:"access_token,omitempty"`
 }
+
+// ---------------------------  END USER STRUCTS ----------------------- //
+type CreateEndUserRequestParamDTO struct {
+	Contact string `form:"contact" binding:"required"`
+}
+type CreateEndUser struct {
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Contact     string `json:"contact"`
+	UserType    string `json:"user_type"`
+	AccessToken string `json:"access_token,omitempty"`
+}
+
+func (endUser *CreateEndUser) InitDefaultEndUser() {
+	endUser.Name = "video_status_" + endUser.Contact
+	endUser.Email = "video_status_@gmail.com"
+	endUser.UserType = "END_USER"
+}

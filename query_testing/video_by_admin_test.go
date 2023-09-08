@@ -53,3 +53,14 @@ func TestUpdateVideoStat(t *testing.T) {
 	rows_affected, _ := result.RowsAffected()
 	require.NotZero(t, rows_affected)
 }
+
+func TestFetchVideoByAdminFullDetails(t *testing.T) {
+	video_id, err := uuid.Parse("7e3aa423-b265-4861-9041-fe308dfb5069")
+
+	require.NoError(t, err)
+
+	result, err := testQueries.GetVideoByAdminFullDetail(context.Background(), video_id)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, result)
+}
