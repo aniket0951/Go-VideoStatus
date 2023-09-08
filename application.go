@@ -15,7 +15,7 @@ import (
 
 const (
 	dbDriver = "postgres"
-	dbSource = "postgresql://root:root@localhost:5432/video_status"
+	dbSource = "postgresql://postgres:root@localhost:5432/video_status?sslmode=disable"
 	address  = "0.0.0.0:8080"
 )
 

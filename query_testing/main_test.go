@@ -12,7 +12,7 @@ import (
 
 const (
 	dbDriver = "postgres"
-	dbSource = "postgresql://root:root@localhost:5432/video_status"
+	dbSource = "postgresql://postgres:root@localhost:5432/video_status?sslmode=disable"
 )
 
 var testQueries *sqlc_lib.Queries

@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"path"
@@ -64,6 +65,12 @@ func (adminServ *adminService) UploadVideoByAdmin(req dto.UploadVideoByAdminRequ
 	defer tempFile.Close()
 	file_path := path.Base(tempFile.Name())
 
+	if strings.Contains(file_path, "static\\") {
+		file_path = strings.TrimLeft(file_path, "static\\")
+	}
+
+	fmt.Println("File Path Has been changed : ", file_path)
+
 	args := db.UploadVideoByAdminParams{
 		Title:       req.Title,
 		FileAddress: file_path,
@@ -74,6 +81,7 @@ func (adminServ *adminService) UploadVideoByAdmin(req dto.UploadVideoByAdminRequ
 	video, err := adminServ.adminRepo.UploadVideoByAdmin(args)
 
 	return video, err
+	//return models.VideoByAdmin{}, nil
 }
 
 func (adminServ *adminService) GetVideoByAdmin(req dto.GetVideoByAdminRequestParams) ([]*models.VideoByAdmin, error) {
@@ -102,6 +110,7 @@ func (adminServ *adminService) GetVideoByAdmin(req dto.GetVideoByAdminRequestPar
 	err = helper.HandleDBErr(err)
 
 	for _, video := range videos {
+		//if strings.Contains(video.FileAddress, "static")
 		video.SetFileAddress("http://localhost:8080/static/")
 	}
 

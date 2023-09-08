@@ -87,7 +87,7 @@ func TestGetUser(t *testing.T) {
 func TestGetUsers(t *testing.T) {
 	args := db.GetUsersParams{
 		Limit:  1,
-		Offset: 2,
+		Offset: 0,
 	}
 
 	users, err := testQueries.GetUsers(context.Background(), args)
